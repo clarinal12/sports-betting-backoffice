@@ -113,7 +113,18 @@ export interface UnsettledEvent {
   awayScore: number | null;
   matchup: string;
   marketStatus: string | null;
+  openBetCount: number;
+  blockers: string[];
   readyToSettle: boolean;
+}
+
+export interface SettlementRunResult {
+  eventId: string;
+  settled: number;
+  attempted: number;
+  remainingOpenBets: number;
+  homeScore?: number;
+  awayScore?: number;
 }
 
 export interface AnalyticsSummary {

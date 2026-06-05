@@ -11,6 +11,7 @@ import type {
   LeagueOffering,
   RiskLimits,
   StaffLoginResponse,
+  SettlementRunResult,
   StaffProfile,
   Tenant,
   UnsettledEvent,
@@ -247,7 +248,12 @@ export function createBackofficeClient(accessToken: string) {
       ),
     searchBets: (
       casinoGroupId: string,
-      params?: { userId?: string; status?: string; limit?: number },
+      params?: {
+        userId?: string;
+        status?: string;
+        eventId?: string;
+        limit?: number;
+      },
     ) => request<Bet[]>('/backoffice/bets', withGroup(casinoGroupId, params)),
     getBet: (casinoGroupId: string, betId: string) =>
       request<Bet>(`/backoffice/bets/${betId}`, withGroup(casinoGroupId)),
@@ -260,6 +266,31 @@ export function createBackofficeClient(accessToken: string) {
     listUnsettledEvents: (casinoGroupId: string) =>
       request<UnsettledEvent[]>(
         '/backoffice/settlement/events',
+        withGroup(casinoGroupId),
+      ),
+    runEventSettlement: (casinoGroupId: string, eventId: string) =>
+      post<SettlementRunResult>(
+        `/backoffice/settlement/events/${eventId}/run`,
+        undefined,
+        withGroup(casinoGroupId),
+      ),
+    applyEventResult: (
+      casinoGroupId: string,
+      eventId: string,
+      body: { homeScore: number; awayScore: number },
+    ) =>
+      post<SettlementRunResult>(
+        `/backoffice/settlement/events/${eventId}/result`,
+        body,
+        withGroup(casinoGroupId),
+      ),
+    applyProviderResult: (
+      casinoGroupId: string,
+      body: { providerRef: string; homeScore: number; awayScore: number },
+    ) =>
+      post<SettlementRunResult>(
+        '/backoffice/settlement/events/by-provider-ref/result',
+        body,
         withGroup(casinoGroupId),
       ),
     getAnalyticsSummary: (casinoGroupId: string) =>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 import { useAuth, useApiErrorHandler } from '@/components/auth-provider';
 import { PermissionGate } from '@/components/permission-gate';
@@ -14,13 +15,19 @@ const STATUSES = ['', 'ACCEPTED', 'WON', 'LOST', 'VOID', 'REJECTED'];
 export default function BetsPage() {
   const { api } = useAuth();
   const { groupId } = useTenant();
+  const searchParams = useSearchParams();
   const handleError = useApiErrorHandler();
   const [bets, setBets] = useState<Bet[]>([]);
   const [userId, setUserId] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(searchParams.get('status') ?? '');
+  const [eventId, setEventId] = useState(searchParams.get('eventId') ?? '');
   const [error, setError] = useState<string | null>(null);
 
-  async function load(filters?: { userId?: string; status?: string }) {
+  async function load(filters?: {
+    userId?: string;
+    status?: string;
+    eventId?: string;
+  }) {
     if (!api || !groupId) return;
     setError(null);
     try {
@@ -28,6 +35,7 @@ export default function BetsPage() {
         await api.searchBets(groupId, {
           userId: filters?.userId,
           status: filters?.status,
+          eventId: filters?.eventId,
           limit: 50,
         }),
       );
@@ -37,14 +45,18 @@ export default function BetsPage() {
   }
 
   useEffect(() => {
-    void load();
-  }, [api, groupId]);
+    void load({
+      status: searchParams.get('status') ?? undefined,
+      eventId: searchParams.get('eventId') ?? undefined,
+    });
+  }, [api, groupId, searchParams]);
 
   function onFilter(event: FormEvent) {
     event.preventDefault();
     void load({
       userId: userId.trim() || undefined,
       status: status || undefined,
+      eventId: eventId.trim() || undefined,
     });
   }
 
@@ -73,6 +85,15 @@ export default function BetsPage() {
                   </option>
                 ))}
               </select>
+            </label>
+            <label className="grid gap-1">
+              <span className={ui.label}>Event ID</span>
+              <input
+                className={ui.input}
+                value={eventId}
+                onChange={(e) => setEventId(e.target.value)}
+                placeholder="Optional"
+              />
             </label>
             <button type="submit" className={ui.btn}>
               Search
