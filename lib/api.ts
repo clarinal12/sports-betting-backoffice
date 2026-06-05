@@ -3,6 +3,9 @@ import type {
   AnalyticsSummary,
   AuditEntry,
   Bet,
+  BetExceptionQueue,
+  DailyGgrReport,
+  TradableMarket,
   CreateMerchantBody,
   CreateMerchantResponse,
   PlatformAdminRow,
@@ -209,6 +212,11 @@ export function createBackofficeClient(accessToken: string) {
         { leagues },
         withGroup(casinoGroupId),
       ),
+    getTradableMarkets: (casinoGroupId: string) =>
+      request<TradableMarket[]>(
+        '/backoffice/trading/markets',
+        withGroup(casinoGroupId),
+      ),
     getExposure: (casinoGroupId: string) =>
       request<ExposureSummary>(
         '/backoffice/trading/exposure',
@@ -244,6 +252,11 @@ export function createBackofficeClient(accessToken: string) {
       post(
         `/backoffice/trading/markets/${marketId}/resume`,
         undefined,
+        withGroup(casinoGroupId),
+      ),
+    listBetExceptions: (casinoGroupId: string) =>
+      request<BetExceptionQueue>(
+        '/backoffice/bets/exceptions',
         withGroup(casinoGroupId),
       ),
     searchBets: (
@@ -298,6 +311,11 @@ export function createBackofficeClient(accessToken: string) {
         '/backoffice/analytics/summary',
         withGroup(casinoGroupId),
       ),
+    getDailyGgr: (casinoGroupId: string, days = 7) =>
+      request<DailyGgrReport>(
+        '/backoffice/analytics/daily',
+        withGroup(casinoGroupId, { days }),
+      ),
     searchAudit: (
       casinoGroupId: string | undefined,
       params?: { action?: string; limit?: number },
@@ -306,6 +324,39 @@ export function createBackofficeClient(accessToken: string) {
         '/backoffice/compliance/audit',
         casinoGroupId ? { casinoGroupId, ...params } : params,
       ),
+    exportAudit: async (
+      casinoGroupId: string | undefined,
+      params?: { action?: string; format?: 'json' | 'csv'; limit?: number },
+    ) => {
+      const response = await fetch(
+        buildUrl(
+          '/backoffice/compliance/audit/export',
+          casinoGroupId
+            ? {
+                casinoGroupId,
+                action: params?.action,
+                format: params?.format ?? 'csv',
+                limit: params?.limit,
+              }
+            : {
+                action: params?.action,
+                format: params?.format ?? 'csv',
+                limit: params?.limit,
+              },
+        ),
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          cache: 'no-store',
+        },
+      );
+      if (!response.ok) {
+        throw new ApiError(response.status, await parseError(response));
+      }
+      if ((params?.format ?? 'csv') === 'csv') {
+        return response.text();
+      }
+      return response.json();
+    },
     createMerchant: (body: CreateMerchantBody) =>
       post<CreateMerchantResponse>('/backoffice/merchants', body),
   };

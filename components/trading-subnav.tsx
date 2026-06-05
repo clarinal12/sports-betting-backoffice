@@ -8,7 +8,8 @@ export function TradingSubnav() {
   const pathname = usePathname();
   const items = [
     { href: '/trading/exposure', label: 'Exposure' },
-    { href: '/trading/limits', label: 'Limits & suspends' },
+    { href: '/trading/markets', label: 'Markets' },
+    { href: '/trading/limits', label: 'Limits' },
   ];
 
   return (

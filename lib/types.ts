@@ -137,6 +137,73 @@ export interface AnalyticsSummary {
   ggr: { settledStake: string; payouts: string; gross: string };
 }
 
+export interface DailyGgrRow {
+  date: string;
+  sportSlug: string;
+  sportName: string;
+  betCount: number;
+  settledStake: string;
+  payouts: string;
+  ggr: string;
+}
+
+export interface DailyGgrReport {
+  casinoGroupId: string;
+  days: number;
+  since: string;
+  rows: DailyGgrRow[];
+}
+
+export interface TradableMarket {
+  marketId: string;
+  marketType: string;
+  marketStatus: string;
+  marketLine: string | null;
+  eventId: string;
+  eventStatus: string;
+  providerRef: string;
+  matchup: string;
+}
+
+export interface BetExceptionQueue {
+  casinoGroupId: string;
+  pendingPlacement: {
+    id: string;
+    userId: string;
+    status: string;
+    stake: string;
+    currency: string;
+    rejectionReason: string | null;
+    createdAt: string;
+  }[];
+  settlementFlags: {
+    id: string;
+    userId: string;
+    status: string;
+    stake: string;
+    currency: string;
+    settlementNote: string | null;
+    updatedAt: string;
+  }[];
+  walletFailures: {
+    outboxId: string;
+    betId: string;
+    outboxStatus: string;
+    attempts: number;
+    lastError: string | null;
+    nextRetryAt: string | null;
+    updatedAt: string;
+    bet: {
+      id: string;
+      userId: string;
+      status: string;
+      stake: string;
+      currency: string;
+    };
+  }[];
+  totalCount: number;
+}
+
 export interface AuditEntry {
   id: string;
   actorType: string;

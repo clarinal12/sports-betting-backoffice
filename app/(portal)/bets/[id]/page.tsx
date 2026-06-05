@@ -9,6 +9,7 @@ import { TenantRequired } from '@/components/tenant-required';
 import { useTenant } from '@/components/tenant-context';
 import type { Bet } from '@/lib/types';
 import { hasPermission } from '@/lib/permissions';
+import { VOID_REASON_CODES, formatVoidReason } from '@/lib/void-reasons';
 import { ui } from '@/lib/ui';
 
 export default function BetDetailPage() {
@@ -17,7 +18,8 @@ export default function BetDetailPage() {
   const { groupId } = useTenant();
   const handleError = useApiErrorHandler();
   const [bet, setBet] = useState<Bet | null>(null);
-  const [reason, setReason] = useState('Customer support void');
+  const [reasonCode, setReasonCode] = useState<string>(VOID_REASON_CODES[0].code);
+  const [reasonNote, setReasonNote] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [voiding, setVoiding] = useState(false);
@@ -42,11 +44,19 @@ export default function BetDetailPage() {
   async function onVoid(event: FormEvent) {
     event.preventDefault();
     if (!api || !groupId || !bet) return;
+    const reason = formatVoidReason(reasonCode, reasonNote);
+    if (
+      !window.confirm(
+        `Void bet ${bet.id.slice(0, 12)}… and refund ${bet.stake} ${bet.currency}?\nReason: ${reason}`,
+      )
+    ) {
+      return;
+    }
     setVoiding(true);
     setError(null);
     setMessage(null);
     try {
-      setBet(await api.voidBet(groupId, bet.id, reason.trim()));
+      setBet(await api.voidBet(groupId, bet.id, reason));
       setMessage('Bet voided and stake refunded.');
     } catch (err) {
       setError(await handleError(err));
@@ -127,12 +137,26 @@ export default function BetDetailPage() {
                 <form className={`${ui.card} grid gap-4`} onSubmit={onVoid}>
                   <h2 className={ui.cardTitle}>Void bet</h2>
                   <label className="grid gap-1">
-                    <span className={ui.label}>Reason</span>
+                    <span className={ui.label}>Reason code</span>
+                    <select
+                      className={ui.input}
+                      value={reasonCode}
+                      onChange={(e) => setReasonCode(e.target.value)}
+                    >
+                      {VOID_REASON_CODES.map((item) => (
+                        <option key={item.code} value={item.code}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="grid gap-1">
+                    <span className={ui.label}>Note (optional)</span>
                     <input
                       className={ui.input}
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
-                      required
+                      value={reasonNote}
+                      onChange={(e) => setReasonNote(e.target.value)}
+                      placeholder="Support ticket or trader note"
                     />
                   </label>
                   <button type="submit" className={`${ui.btnDanger} w-fit`} disabled={voiding}>

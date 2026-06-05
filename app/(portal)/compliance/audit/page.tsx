@@ -15,6 +15,7 @@ export default function AuditPage() {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [action, setAction] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   async function load(filterAction?: string) {
     if (!api) return;
@@ -40,12 +41,41 @@ export default function AuditPage() {
     void load(action.trim() || undefined);
   }
 
+  async function onExport(format: 'csv' | 'json') {
+    if (!api) return;
+    setExporting(true);
+    setError(null);
+    try {
+      const result = await api.exportAudit(groupId ?? undefined, {
+        action: action.trim() || undefined,
+        format,
+        limit: 2000,
+      });
+      const blob =
+        format === 'csv'
+          ? new Blob([result as string], { type: 'text/csv;charset=utf-8' })
+          : new Blob([JSON.stringify(result, null, 2)], {
+              type: 'application/json',
+            });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `audit-export.${format}`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(await handleError(err));
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <PermissionGate permission="compliance.audit.read">
       <div className={ui.page}>
         <header className="mb-6">
           <h1 className="text-3xl font-semibold">Audit log</h1>
-          <p className={ui.muted}>Search append-only audit entries.</p>
+          <p className={ui.muted}>Search and export append-only audit entries.</p>
         </header>
         <TenantRequired>
           <form
@@ -58,11 +88,27 @@ export default function AuditPage() {
                 className={ui.input}
                 value={action}
                 onChange={(e) => setAction(e.target.value)}
-                placeholder="e.g. bets.voided"
+                placeholder="e.g. trading.market_suspended"
               />
             </label>
             <button type="submit" className={ui.btn}>
               Search
+            </button>
+            <button
+              type="button"
+              className={ui.btnGhost}
+              disabled={exporting}
+              onClick={() => void onExport('csv')}
+            >
+              {exporting ? 'Exporting…' : 'Export CSV'}
+            </button>
+            <button
+              type="button"
+              className={ui.btnGhost}
+              disabled={exporting}
+              onClick={() => void onExport('json')}
+            >
+              Export JSON
             </button>
           </form>
           {error ? <p className="mb-4 text-sm text-red-400">{error}</p> : null}

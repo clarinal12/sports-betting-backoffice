@@ -66,6 +66,9 @@ export default function BetsPage() {
         <header className="mb-6">
           <h1 className="text-3xl font-semibold">Bet monitor</h1>
           <p className={ui.muted}>Search recent bets for the tenant.</p>
+          <Link href="/bets/exceptions" className={`${ui.navLink} mt-2 inline-block`}>
+            Exception queue →
+          </Link>
         </header>
         <TenantRequired>
           <form
