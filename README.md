@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sports Betting Back Office
 
-## Getting Started
+Next.js operator portal for the [sports-betting-service](../sports-betting-service) Phase 6 back-office APIs.
 
-First, run the development server:
+Runs on **port 3002** (player shell uses 3000; API uses 3001).
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
+pnpm install   # or npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ensure the API allows browser CORS from this origin in development:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# sports-betting-service/.env
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:3002,http://127.0.0.1:3002
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Tenant picker loads from `GET /backoffice/tenants` (scoped by role and SUPER_ADMIN grants).
 
-## Learn More
+Seed: `platform@example.com` is granted **Acme only**; `super@example.com` sees all tenants and can edit grants under **Access** in the UI.
 
-To learn more about Next.js, take a look at the following resources:
+## Run
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Terminal 1 — API
+cd ../sports-betting-service && npm run start:dev
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Terminal 2 — back office
+pnpm dev
+```
 
-## Deploy on Vercel
+Open [http://localhost:3002](http://localhost:3002).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Seed staff logins
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+After `npx prisma db seed` in the API repo:
+
+| Account | Password | Role | Scope |
+|---------|----------|------|-------|
+| `super@example.com` | `Super123!` | `SUPER_ADMIN` | Platform super-user + staff IAM |
+| `platform@example.com` | `Platform123!` | `PLATFORM_ADMIN` | Cross-tenant ops + merchant onboarding |
+| `admin@acme.example.com` | `Acme123!` | `OPERATOR_ADMIN` | Acme tenant admin only |
+
+## Navigation (Phase 6.9)
+
+Matches `DESIGN.md` §4.9.10:
+
+- **Home** — KPIs (analytics + exposure)
+- **Trading** — Exposure, limits, suspend/resume
+- **Product** — League offering toggles
+- **Bets** — Monitor, detail, void
+- **Settlement** — Unsettled events with open bets
+- **Analytics** — GGR and status breakdown
+- **Compliance** — Audit log search
+- **Settings** — Tenant profile, merchant create (platform)
