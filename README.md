@@ -1,6 +1,8 @@
 # Sports Betting Back Office
 
-Next.js operator portal for the [sports-betting-service](../sports-betting-service) Phase 6 back-office APIs.
+Next.js operator portal for the [sports-betting-service](https://github.com/clarinal12/sports-betting-service) Phase 6 back-office APIs.
+
+GitHub: [clarinal12/sports-betting-backoffice](https://github.com/clarinal12/sports-betting-backoffice)
 
 Runs on **port 3002** (player shell uses 3000; API uses 3001).
 
