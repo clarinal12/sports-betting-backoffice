@@ -9,7 +9,12 @@ import { TenantRequired } from '@/components/tenant-required';
 import { useTenant } from '@/components/tenant-context';
 import type { Bet } from '@/lib/types';
 import { hasPermission } from '@/lib/permissions';
-import { VOID_REASON_CODES, formatVoidReason } from '@/lib/void-reasons';
+import {
+  VOID_REASON_CODES,
+  formatVoidReason,
+  isVoidNoteRequired,
+  validateVoidReason,
+} from '@/lib/void-reasons';
 import { ui } from '@/lib/ui';
 
 export default function BetDetailPage() {
@@ -41,9 +46,16 @@ export default function BetDetailPage() {
     };
   }, [api, groupId, params.id, handleError]);
 
+  const noteRequired = isVoidNoteRequired(reasonCode);
+
   async function onVoid(event: FormEvent) {
     event.preventDefault();
     if (!api || !groupId || !bet) return;
+    const validationError = validateVoidReason(reasonCode, reasonNote);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     const reason = formatVoidReason(reasonCode, reasonNote);
     if (
       !window.confirm(
@@ -151,15 +163,26 @@ export default function BetDetailPage() {
                     </select>
                   </label>
                   <label className="grid gap-1">
-                    <span className={ui.label}>Note (optional)</span>
+                    <span className={ui.label}>
+                      Note {noteRequired ? '(required)' : '(optional)'}
+                    </span>
                     <input
                       className={ui.input}
                       value={reasonNote}
                       onChange={(e) => setReasonNote(e.target.value)}
-                      placeholder="Support ticket or trader note"
+                      placeholder={
+                        noteRequired
+                          ? 'Explain why this bet is being voided'
+                          : 'Support ticket or trader note'
+                      }
+                      required={noteRequired}
                     />
                   </label>
-                  <button type="submit" className={`${ui.btnDanger} w-fit`} disabled={voiding}>
+                  <button
+                    type="submit"
+                    className={`${ui.btnDanger} w-fit`}
+                    disabled={voiding || (noteRequired && !reasonNote.trim())}
+                  >
                     {voiding ? 'Voiding…' : 'Void and refund stake'}
                   </button>
                 </form>
