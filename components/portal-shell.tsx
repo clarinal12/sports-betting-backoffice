@@ -63,6 +63,13 @@ const ADMIN_NAV: NavItem[] = [
     platformOnly: true,
   },
   {
+    href: '/settings/operators',
+    label: 'Operator accounts',
+    permission: 'staff.operator.read',
+    match: '/settings/operators',
+    platformOnly: true,
+  },
+  {
     href: '/settings/platform-access',
     label: 'Platform access',
     permission: 'staff.tenant_access.read',

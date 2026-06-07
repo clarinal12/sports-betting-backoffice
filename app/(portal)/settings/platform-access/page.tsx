@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAuth, useApiErrorHandler } from '@/components/auth-provider';
 import { PermissionGate } from '@/components/permission-gate';
+import { SettingsNav } from '@/components/settings-nav';
 import { useTenant } from '@/components/tenant-context';
 import type { PlatformAdminRow, TenantListItem } from '@/lib/types';
 import { hasPermission } from '@/lib/permissions';
@@ -102,21 +102,7 @@ export default function PlatformAccessPage() {
             Assign which merchant accounts each PLATFORM_ADMIN may access.
           </p>
         </header>
-        <nav className="mb-6 flex flex-wrap gap-2">
-          {hasPermission(staff?.permissions ?? [], 'tenant.read') ? (
-            <Link href="/settings/tenant" className={ui.navLink}>
-              Tenant
-            </Link>
-          ) : null}
-          {hasPermission(staff?.permissions ?? [], 'tenant.create') ? (
-            <Link href="/settings/merchants" className={ui.navLink}>
-              Merchants
-            </Link>
-          ) : null}
-          <Link href="/settings/platform-access" className={ui.navLinkActive}>
-            Platform access
-          </Link>
-        </nav>
+        <SettingsNav active="platform-access" />
 
         {error ? <p className="mb-4 text-sm text-red-400">{error}</p> : null}
         {message ? <p className="mb-4 text-sm text-zinc-400">{message}</p> : null}

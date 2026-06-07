@@ -1,12 +1,12 @@
 'use client';
 
-import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { useAuth, useApiErrorHandler } from '@/components/auth-provider';
 import { PermissionGate } from '@/components/permission-gate';
 import { TenantRequired } from '@/components/tenant-required';
 import { useTenant } from '@/components/tenant-context';
 import type { Tenant } from '@/lib/types';
+import { SettingsNav } from '@/components/settings-nav';
 import { hasPermission } from '@/lib/permissions';
 import { ui } from '@/lib/ui';
 
@@ -60,16 +60,7 @@ export default function SettingsTenantPage() {
           <h1 className="text-3xl font-semibold">Tenant & brand</h1>
           <p className={ui.muted}>Casino group settings for the selected tenant.</p>
         </header>
-        <nav className="mb-6 flex flex-wrap gap-2">
-          <Link href="/settings/tenant" className={ui.navLinkActive}>
-            Tenant
-          </Link>
-          {hasPermission(staff?.permissions ?? [], 'tenant.create') ? (
-            <Link href="/settings/merchants" className={ui.navLink}>
-              Merchants
-            </Link>
-          ) : null}
-        </nav>
+        <SettingsNav active="tenant" />
         <TenantRequired>
           {error ? <p className="mb-4 text-sm text-red-400">{error}</p> : null}
           {message ? <p className="mb-4 text-sm text-zinc-400">{message}</p> : null}

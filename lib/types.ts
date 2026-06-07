@@ -229,6 +229,15 @@ export interface CreateMerchantBody {
   operatorPassword?: string;
 }
 
+export interface OperatorStaffAccount {
+  id: string;
+  email: string;
+  roles: string[];
+  status: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface CreateMerchantOperatorAdmin {
   email: string;
   password: string;

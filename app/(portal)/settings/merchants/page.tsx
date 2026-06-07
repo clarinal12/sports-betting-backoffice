@@ -1,20 +1,19 @@
 'use client';
 
-import Link from 'next/link';
 import { FormEvent, useState } from 'react';
 import { useAuth, useApiErrorHandler } from '@/components/auth-provider';
 import { useTenant } from '@/components/tenant-context';
 import { PermissionGate } from '@/components/permission-gate';
+import { SettingsNav } from '@/components/settings-nav';
 import {
   suggestMerchantId,
   suggestOperatorEmail,
 } from '@/lib/merchant-onboarding';
 import type { CreateMerchantOperatorAdmin } from '@/lib/types';
-import { hasPermission } from '@/lib/permissions';
 import { ui } from '@/lib/ui';
 
 export default function SettingsMerchantsPage() {
-  const { api, staff } = useAuth();
+  const { api } = useAuth();
   const { refreshTenants, setGroupId } = useTenant();
   const handleError = useApiErrorHandler();
   const [slug, setSlug] = useState('');
@@ -86,16 +85,7 @@ export default function SettingsMerchantsPage() {
             plaintext sports secret (shown once).
           </p>
         </header>
-        <nav className="mb-6 flex flex-wrap gap-2">
-          {hasPermission(staff?.permissions ?? [], 'tenant.read') ? (
-            <Link href="/settings/tenant" className={ui.navLink}>
-              Tenant
-            </Link>
-          ) : null}
-          <Link href="/settings/merchants" className={ui.navLinkActive}>
-            Merchants
-          </Link>
-        </nav>
+        <SettingsNav active="merchants" />
         {error ? <p className="mb-4 text-sm text-red-400">{error}</p> : null}
         <form className={`${ui.card} grid max-w-xl gap-4`} onSubmit={onSubmit}>
           <label className="grid gap-1">
