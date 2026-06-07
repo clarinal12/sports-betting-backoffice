@@ -8,6 +8,7 @@ import type {
   TradableMarket,
   CreateMerchantBody,
   CreateMerchantResponse,
+  CreateOperatorStaffResponse,
   OperatorStaffAccount,
   PlatformAdminRow,
   ExposureSummary,
@@ -363,6 +364,15 @@ export function createBackofficeClient(accessToken: string) {
     listOperatorAdmins: (casinoGroupId: string) =>
       request<OperatorStaffAccount[]>(
         '/backoffice/staff/operators',
+        withGroup(casinoGroupId),
+      ),
+    createOperatorAdmin: (
+      casinoGroupId: string,
+      body: { email: string; password?: string },
+    ) =>
+      post<CreateOperatorStaffResponse>(
+        '/backoffice/staff/operators',
+        body,
         withGroup(casinoGroupId),
       ),
     updateOperatorAdmin: (
