@@ -5,7 +5,11 @@ import { FormEvent, useState } from 'react';
 import { useAuth, useApiErrorHandler } from '@/components/auth-provider';
 import { useTenant } from '@/components/tenant-context';
 import { PermissionGate } from '@/components/permission-gate';
-import { suggestMerchantId } from '@/lib/merchant-onboarding';
+import {
+  suggestMerchantId,
+  suggestOperatorEmail,
+} from '@/lib/merchant-onboarding';
+import type { CreateMerchantOperatorAdmin } from '@/lib/types';
 import { hasPermission } from '@/lib/permissions';
 import { ui } from '@/lib/ui';
 
@@ -17,7 +21,12 @@ export default function SettingsMerchantsPage() {
   const [name, setName] = useState('');
   const [merchantId, setMerchantId] = useState('');
   const [merchantIdTouched, setMerchantIdTouched] = useState(false);
+  const [operatorEmail, setOperatorEmail] = useState('');
+  const [operatorEmailTouched, setOperatorEmailTouched] = useState(false);
+  const [operatorPassword, setOperatorPassword] = useState('');
   const [sportsSecret, setSportsSecret] = useState<string | null>(null);
+  const [operatorAdmin, setOperatorAdmin] =
+    useState<CreateMerchantOperatorAdmin | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -25,6 +34,9 @@ export default function SettingsMerchantsPage() {
     setSlug(value);
     if (!merchantIdTouched) {
       setMerchantId(suggestMerchantId(value));
+    }
+    if (!operatorEmailTouched) {
+      setOperatorEmail(suggestOperatorEmail(value));
     }
   }
 
@@ -39,14 +51,22 @@ export default function SettingsMerchantsPage() {
     setLoading(true);
     setError(null);
     setSportsSecret(null);
+    setOperatorAdmin(null);
     const trimmedMerchantId = merchantId.trim();
+    const trimmedOperatorEmail = operatorEmail.trim();
+    const trimmedOperatorPassword = operatorPassword.trim();
     try {
       const result = await api.createMerchant({
         slug: slug.trim(),
         name: name.trim(),
         ...(trimmedMerchantId ? { merchantId: trimmedMerchantId } : {}),
+        ...(trimmedOperatorEmail ? { operatorEmail: trimmedOperatorEmail } : {}),
+        ...(trimmedOperatorPassword
+          ? { operatorPassword: trimmedOperatorPassword }
+          : {}),
       });
       setSportsSecret(result.sportsSecret);
+      setOperatorAdmin(result.operatorAdmin);
       await refreshTenants();
       setGroupId(result.id);
     } catch (err) {
@@ -62,7 +82,8 @@ export default function SettingsMerchantsPage() {
         <header className="mb-4">
           <h1 className="text-3xl font-semibold">Merchant onboarding</h1>
           <p className={ui.muted}>
-            Create a casino group and receive the plaintext sports secret once.
+            Create a casino group, an operator back-office login, and the
+            plaintext sports secret (shown once).
           </p>
         </header>
         <nav className="mb-6 flex flex-wrap gap-2">
@@ -117,10 +138,61 @@ export default function SettingsMerchantsPage() {
               from the slug; edit only if your integration uses a different id.
             </span>
           </label>
+          <label className="grid gap-1">
+            <span className={ui.label}>Operator email</span>
+            <input
+              className={ui.input}
+              type="email"
+              value={operatorEmail}
+              onChange={(e) => {
+                setOperatorEmailTouched(true);
+                setOperatorEmail(e.target.value);
+              }}
+              placeholder={suggestOperatorEmail(slug) || 'admin@luckystar.merchant.local'}
+            />
+            <span className={ui.muted}>
+              Merchant staff login at the back office (OPERATOR_ADMIN). Password
+              is optional — leave blank to auto-generate.
+            </span>
+          </label>
+          <label className="grid gap-1">
+            <span className={ui.label}>Operator password (optional)</span>
+            <input
+              className={ui.input}
+              type="password"
+              value={operatorPassword}
+              onChange={(e) => setOperatorPassword(e.target.value)}
+              placeholder="Min 8 characters if set"
+              minLength={8}
+            />
+          </label>
           <button type="submit" className={`${ui.btn} w-fit`} disabled={loading}>
             {loading ? 'Creating…' : 'Create merchant'}
           </button>
         </form>
+        {operatorAdmin ? (
+          <div className={`${ui.card} mt-4`}>
+            <h2 className={ui.cardTitle}>Operator login (copy now)</h2>
+            <p className={`${ui.muted} mt-1`}>
+              Sign in at the back office with this tenant-scoped account.
+            </p>
+            <dl className="mt-3 grid gap-2 text-sm">
+              <div>
+                <dt className={ui.label}>Email</dt>
+                <dd className="font-mono text-zinc-200">{operatorAdmin.email}</dd>
+              </div>
+              <div>
+                <dt className={ui.label}>Password</dt>
+                <dd className="font-mono text-amber-300">{operatorAdmin.password}</dd>
+              </div>
+            </dl>
+            {operatorAdmin.passwordAutoGenerated ? (
+              <p className={`${ui.muted} mt-2 text-xs`}>
+                Password was auto-generated. Store it securely; it is not shown again.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         {sportsSecret ? (
           <div className={`${ui.card} mt-4`}>
             <h2 className={ui.cardTitle}>Sports secret (copy now)</h2>
