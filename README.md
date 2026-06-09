@@ -4,7 +4,7 @@ Next.js operator portal for the [sports-betting-service](https://github.com/clar
 
 GitHub: [clarinal12/sports-betting-backoffice](https://github.com/clarinal12/sports-betting-backoffice)
 
-Runs on **port 5001** (player shell uses 5002; API uses 5003).
+Runs on **port 3002** (player shell uses 3000; API uses 3001).
 
 ## Setup
 
@@ -17,7 +17,7 @@ Ensure the API allows browser CORS from this origin in development:
 
 ```bash
 # sports-betting-service/.env
-CORS_ORIGINS=http://localhost:5001,http://127.0.0.1:5001,http://localhost:5002,http://127.0.0.1:5002
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:3002,http://127.0.0.1:3002
 ```
 
 Tenant picker loads from `GET /backoffice/tenants` (scoped by role and SUPER_ADMIN grants).
@@ -34,7 +34,7 @@ cd ../sports-betting-service && npm run start:dev
 pnpm dev
 ```
 
-Open [http://localhost:5001](http://localhost:5001).
+Open [http://localhost:3002](http://localhost:3002).
 
 ## Seed staff logins
 
