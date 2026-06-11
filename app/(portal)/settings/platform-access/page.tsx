@@ -1,18 +1,22 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth, useApiErrorHandler } from '@/components/auth-provider';
 import { PermissionGate } from '@/components/permission-gate';
 import { SettingsNav } from '@/components/settings-nav';
 import { useTenant } from '@/components/tenant-context';
 import type { PlatformAdminRow, TenantListItem } from '@/lib/types';
 import { hasPermission } from '@/lib/permissions';
+import { isPlatformStaff } from '@/lib/staff-roles';
 import { ui } from '@/lib/ui';
 
 export default function PlatformAccessPage() {
+  const router = useRouter();
   const { api, staff } = useAuth();
   const { refreshTenants } = useTenant();
   const handleError = useApiErrorHandler();
+  const platformStaff = isPlatformStaff(staff);
   const [admins, setAdmins] = useState<PlatformAdminRow[]>([]);
   const [allTenants, setAllTenants] = useState<TenantListItem[]>([]);
   const [drafts, setDrafts] = useState<Record<string, string[]>>({});
@@ -21,6 +25,10 @@ export default function PlatformAccessPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!platformStaff) {
+      router.replace('/settings/tenant');
+      return;
+    }
     if (!api) return;
     let cancelled = false;
 
@@ -57,7 +65,11 @@ export default function PlatformAccessPage() {
     return () => {
       cancelled = true;
     };
-  }, [api, handleError]);
+  }, [api, handleError, platformStaff, router]);
+
+  if (!platformStaff) {
+    return null;
+  }
 
   async function save(adminId: string) {
     if (!api) return;

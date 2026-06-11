@@ -42,7 +42,7 @@ export function TenantPicker({
   return (
     <div className={sidebar ? 'space-y-1' : 'flex items-center gap-2'}>
       <select
-        className={sidebar ? `${ui.input} w-full text-sm` : `${ui.input} !w-auto min-w-44`}
+        className={sidebar ? `${ui.select} w-full text-sm` : `${ui.select} !w-auto min-w-44`}
         value={groupId ?? ''}
         onChange={(e) => setGroupId(e.target.value)}
         aria-label="Select tenant"

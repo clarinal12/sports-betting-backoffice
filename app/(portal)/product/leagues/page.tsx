@@ -7,6 +7,7 @@ import { TenantRequired } from '@/components/tenant-required';
 import { useTenant } from '@/components/tenant-context';
 import type { LeagueOffering } from '@/lib/types';
 import { hasPermission } from '@/lib/permissions';
+import { isPlatformStaff } from '@/lib/staff-roles';
 import { ui } from '@/lib/ui';
 
 export default function ProductLeaguesPage() {
@@ -17,6 +18,20 @@ export default function ProductLeaguesPage() {
   const [error, setError] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const canUpdate = hasPermission(staff?.permissions ?? [], 'product.leagues.update');
+  const platformStaff = isPlatformStaff(staff);
+
+  function canToggleLeague(league: LeagueOffering): boolean {
+    if (!canUpdate) {
+      return false;
+    }
+    if (league.enabled) {
+      return true;
+    }
+    if (league.platformLocked && !platformStaff) {
+      return false;
+    }
+    return true;
+  }
 
   useEffect(() => {
     if (!api || !groupId) return;
@@ -35,7 +50,7 @@ export default function ProductLeaguesPage() {
   }, [api, groupId, handleError]);
 
   async function toggleLeague(league: LeagueOffering) {
-    if (!api || !groupId || !canUpdate) return;
+    if (!api || !groupId || !canToggleLeague(league)) return;
     setSavingId(league.leagueId);
     setError(null);
     try {
@@ -84,9 +99,14 @@ export default function ProductLeaguesPage() {
                       <span className={ui.badge}>
                         {league.enabled ? 'Yes' : 'No'}
                       </span>
+                      {league.platformLocked && !league.enabled ? (
+                        <div className="mt-1 text-xs text-amber-500/90">
+                          Disabled by platform
+                        </div>
+                      ) : null}
                     </td>
                     <td className={ui.td}>
-                      {canUpdate ? (
+                      {canToggleLeague(league) ? (
                         <button
                           type="button"
                           className={ui.btnGhost}
@@ -99,6 +119,10 @@ export default function ProductLeaguesPage() {
                               ? 'Disable'
                               : 'Enable'}
                         </button>
+                      ) : league.platformLocked && !league.enabled ? (
+                        <span className={`${ui.muted} text-xs`}>
+                          Contact platform support
+                        </span>
                       ) : null}
                     </td>
                   </tr>

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from './auth-provider';
 import { TenantPicker } from './tenant-picker';
 import { hasPermission } from '@/lib/permissions';
+import { isPlatformStaff, isTenantOperator } from '@/lib/staff-roles';
 import { ui } from '@/lib/ui';
 
 type NavItem = {
@@ -67,7 +68,6 @@ const ADMIN_NAV: NavItem[] = [
     label: 'Operator accounts',
     permission: 'staff.operator.read',
     match: '/settings/operators',
-    platformOnly: true,
   },
   {
     href: '/settings/platform-access',
@@ -130,9 +130,13 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
     return null;
   }
 
-  const isPlatformStaff = staff.casinoGroupId == null;
-  const mainNav = filterNav(MAIN_NAV, staff, isPlatformStaff);
-  const adminNav = filterNav(ADMIN_NAV, staff, isPlatformStaff);
+  const isPlatformStaffUser = isPlatformStaff(staff);
+  const mainNav = filterNav(MAIN_NAV, staff, isPlatformStaffUser);
+  const adminNav = filterNav(ADMIN_NAV, staff, isPlatformStaffUser).map((item) =>
+    item.href === '/settings/operators' && isTenantOperator(staff)
+      ? { ...item, label: 'Account' }
+      : item,
+  );
 
   return (
     <div className="flex min-h-screen bg-zinc-950 text-zinc-100">

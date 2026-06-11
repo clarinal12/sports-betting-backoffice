@@ -49,12 +49,16 @@ function buildUrl(
 
 async function parseError(response: Response): Promise<string> {
   try {
-    const body = (await response.json()) as { message?: string | string[] };
-    if (Array.isArray(body.message)) {
-      return body.message.join(', ');
+    const body = (await response.json()) as { message?: unknown };
+    const { message } = body;
+    if (Array.isArray(message)) {
+      return message.map(String).join(', ');
     }
-    if (body.message) {
-      return body.message;
+    if (typeof message === 'string' && message.trim()) {
+      return message;
+    }
+    if (message && typeof message === 'object') {
+      return JSON.stringify(message);
     }
   } catch {
     // ignore
@@ -177,6 +181,25 @@ export function createBackofficeClient(accessToken: string) {
     return response.json() as Promise<T>;
   }
 
+  async function patchNoContent(
+    path: string,
+    body: unknown,
+    params?: Record<string, string | undefined>,
+  ): Promise<void> {
+    const response = await fetch(buildUrl(path, params), {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      cache: 'no-store',
+    });
+    if (!response.ok) {
+      throw new ApiError(response.status, await parseError(response));
+    }
+  }
+
   function withGroup(
     casinoGroupId: string,
     params: Record<string, string | number | undefined> = {},
@@ -186,6 +209,10 @@ export function createBackofficeClient(accessToken: string) {
 
   return {
     getMe: () => request<StaffProfile>('/backoffice/staff/me'),
+    changeOwnPassword: (body: {
+      currentPassword: string;
+      newPassword: string;
+    }) => patchNoContent('/backoffice/staff/me/password', body),
     listTenants: () => request<TenantListItem[]>('/backoffice/tenants'),
     listPlatformAdmins: () =>
       request<PlatformAdminRow[]>('/backoffice/staff/platform-admins'),
@@ -198,7 +225,12 @@ export function createBackofficeClient(accessToken: string) {
       request<Tenant>('/backoffice/tenant', withGroup(casinoGroupId)),
     patchTenant: (
       casinoGroupId: string,
-      body: Partial<Pick<Tenant, 'name' | 'defaultCurrency' | 'timezone' | 'status'>>,
+      body: Partial<
+        Pick<
+          Tenant,
+          'name' | 'defaultCurrency' | 'timezone' | 'status' | 'walletApiUrl'
+        >
+      >,
     ) => patch<Tenant>('/backoffice/tenant', body, withGroup(casinoGroupId)),
     listLeagues: (casinoGroupId: string) =>
       request<LeagueOffering[]>(

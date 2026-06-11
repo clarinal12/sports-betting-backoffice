@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useAuth } from '@/components/auth-provider';
 import { hasPermission } from '@/lib/permissions';
+import { isPlatformStaff } from '@/lib/staff-roles';
 import { ui } from '@/lib/ui';
 
 type SettingsNavProps = {
@@ -12,6 +13,7 @@ type SettingsNavProps = {
 export function SettingsNav({ active }: SettingsNavProps) {
   const { staff } = useAuth();
   const permissions = staff?.permissions ?? [];
+  const platformStaff = isPlatformStaff(staff);
 
   return (
     <nav className="mb-6 flex flex-wrap gap-2">
@@ -36,10 +38,10 @@ export function SettingsNav({ active }: SettingsNavProps) {
           href="/settings/operators"
           className={active === 'operators' ? ui.navLinkActive : ui.navLink}
         >
-          Operator accounts
+          {platformStaff ? 'Operator accounts' : 'Account'}
         </Link>
       ) : null}
-      {hasPermission(permissions, 'staff.tenant_access.read') ? (
+      {platformStaff && hasPermission(permissions, 'staff.tenant_access.read') ? (
         <Link
           href="/settings/platform-access"
           className={

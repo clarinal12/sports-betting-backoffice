@@ -151,7 +151,7 @@ export default function BetDetailPage() {
                   <label className="grid gap-1">
                     <span className={ui.label}>Reason code</span>
                     <select
-                      className={ui.input}
+                      className={ui.select}
                       value={reasonCode}
                       onChange={(e) => setReasonCode(e.target.value)}
                     >

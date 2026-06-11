@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useAuth, useApiErrorHandler } from '@/components/auth-provider';
 import { PermissionGate } from '@/components/permission-gate';
 import { TenantRequired } from '@/components/tenant-required';
@@ -8,6 +8,12 @@ import { useTenant } from '@/components/tenant-context';
 import type { Tenant } from '@/lib/types';
 import { SettingsNav } from '@/components/settings-nav';
 import { hasPermission } from '@/lib/permissions';
+import { canEditTenantPlatformFields } from '@/lib/staff-roles';
+import {
+  currencyOptions,
+  TENANT_STATUS_OPTIONS,
+  timezoneOptions,
+} from '@/lib/tenant-settings';
 import { ui } from '@/lib/ui';
 
 export default function SettingsTenantPage() {
@@ -19,6 +25,16 @@ export default function SettingsTenantPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const canUpdate = hasPermission(staff?.permissions ?? [], 'tenant.update');
+  const canEditPlatformFields = canEditTenantPlatformFields(staff);
+
+  const currencies = useMemo(
+    () => currencyOptions(form.defaultCurrency ?? tenant?.defaultCurrency),
+    [form.defaultCurrency, tenant?.defaultCurrency],
+  );
+  const timezones = useMemo(
+    () => timezoneOptions(form.timezone ?? tenant?.timezone),
+    [form.timezone, tenant?.timezone],
+  );
 
   useEffect(() => {
     if (tenant) {
@@ -27,6 +43,7 @@ export default function SettingsTenantPage() {
         defaultCurrency: tenant.defaultCurrency,
         timezone: tenant.timezone,
         status: tenant.status,
+        walletApiUrl: tenant.walletApiUrl ?? '',
       });
     }
   }, [tenant]);
@@ -40,9 +57,14 @@ export default function SettingsTenantPage() {
     try {
       await api.patchTenant(groupId, {
         name: form.name,
-        defaultCurrency: form.defaultCurrency,
-        timezone: form.timezone,
-        status: form.status,
+        walletApiUrl: form.walletApiUrl?.trim() || null,
+        ...(canEditPlatformFields
+          ? {
+              defaultCurrency: form.defaultCurrency,
+              timezone: form.timezone,
+              status: form.status,
+            }
+          : {}),
       });
       await refreshTenant();
       setMessage('Tenant updated.');
@@ -81,36 +103,86 @@ export default function SettingsTenantPage() {
               </label>
               <label className="grid gap-1">
                 <span className={ui.label}>Default currency</span>
-                <input
-                  className={ui.input}
+                <select
+                  className={ui.select}
                   value={form.defaultCurrency ?? ''}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, defaultCurrency: e.target.value }))
                   }
-                  disabled={!canUpdate}
-                />
+                  disabled={!canUpdate || !canEditPlatformFields}
+                >
+                  {currencies.map((code) => (
+                    <option key={code} value={code}>
+                      {code}
+                    </option>
+                  ))}
+                </select>
+                {!canEditPlatformFields ? (
+                  <span className={ui.muted}>
+                    Only platform administrators can change currency.
+                  </span>
+                ) : null}
               </label>
               <label className="grid gap-1">
                 <span className={ui.label}>Timezone</span>
-                <input
-                  className={ui.input}
+                <select
+                  className={ui.select}
                   value={form.timezone ?? ''}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, timezone: e.target.value }))
                   }
+                  disabled={!canUpdate || !canEditPlatformFields}
+                >
+                  {timezones.map((zone) => (
+                    <option key={zone} value={zone}>
+                      {zone}
+                    </option>
+                  ))}
+                </select>
+                {!canEditPlatformFields ? (
+                  <span className={ui.muted}>
+                    Only platform administrators can change timezone.
+                  </span>
+                ) : null}
+              </label>
+              <label className="grid gap-1">
+                <span className={ui.label}>Wallet API URL</span>
+                <input
+                  className={ui.input}
+                  type="url"
+                  placeholder="https://wallet.client.example.com/api"
+                  value={form.walletApiUrl ?? ''}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, walletApiUrl: e.target.value }))
+                  }
                   disabled={!canUpdate}
                 />
+                <span className={ui.muted}>
+                  Client wallet base URL. We call /balance, /transaction, and
+                  /batch-transactions with Basic auth (merchantId:sportsSecret).
+                </span>
               </label>
               <label className="grid gap-1">
                 <span className={ui.label}>Status</span>
-                <input
-                  className={ui.input}
+                <select
+                  className={ui.select}
                   value={form.status ?? ''}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, status: e.target.value }))
                   }
-                  disabled={!canUpdate}
-                />
+                  disabled={!canUpdate || !canEditPlatformFields}
+                >
+                  {TENANT_STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {!canEditPlatformFields ? (
+                  <span className={ui.muted}>
+                    Only platform administrators can change status.
+                  </span>
+                ) : null}
               </label>
               {canUpdate ? (
                 <button type="submit" className={`${ui.btn} w-fit`} disabled={saving}>

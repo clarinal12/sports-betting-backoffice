@@ -81,7 +81,7 @@ export default function BetsPage() {
             </label>
             <label className="grid gap-1">
               <span className={ui.label}>Status</span>
-              <select className={ui.input} value={status} onChange={(e) => setStatus(e.target.value)}>
+              <select className={ui.select} value={status} onChange={(e) => setStatus(e.target.value)}>
                 {STATUSES.map((value) => (
                   <option key={value || 'all'} value={value}>
                     {value || 'All'}

@@ -22,6 +22,7 @@ export interface Tenant {
   timezone: string;
   status: string;
   merchantId: string;
+  walletApiUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -49,6 +50,7 @@ export interface LeagueOffering {
   sportKey: string;
   sportName: string;
   enabled: boolean;
+  platformLocked: boolean;
 }
 
 export interface ExposureSummary {
