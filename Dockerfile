@@ -2,12 +2,13 @@ FROM node:24-alpine AS base
 WORKDIR /app
 
 FROM base AS deps
-COPY package.json ./
-RUN npm install
+COPY package.json package-lock.json ./
+RUN npm install --no-audit --no-fund
 
 FROM base AS build
 ARG NEXT_PUBLIC_API_BASE=http://localhost:5003/api/v1
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
+ENV NODE_OPTIONS="--max-old-space-size=768"
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
