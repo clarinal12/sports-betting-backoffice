@@ -227,6 +227,7 @@ export interface CreateMerchantBody {
   defaultCurrency?: string;
   timezone?: string;
   leagueKeys?: string[];
+  walletApiUrl?: string;
   operatorEmail?: string;
   operatorPassword?: string;
 }

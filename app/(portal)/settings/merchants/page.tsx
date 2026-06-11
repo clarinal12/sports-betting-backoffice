@@ -23,6 +23,7 @@ export default function SettingsMerchantsPage() {
   const [operatorEmail, setOperatorEmail] = useState('');
   const [operatorEmailTouched, setOperatorEmailTouched] = useState(false);
   const [operatorPassword, setOperatorPassword] = useState('');
+  const [walletApiUrl, setWalletApiUrl] = useState('');
   const [sportsSecret, setSportsSecret] = useState<string | null>(null);
   const [operatorAdmin, setOperatorAdmin] =
     useState<CreateMerchantOperatorAdmin | null>(null);
@@ -54,11 +55,13 @@ export default function SettingsMerchantsPage() {
     const trimmedMerchantId = merchantId.trim();
     const trimmedOperatorEmail = operatorEmail.trim();
     const trimmedOperatorPassword = operatorPassword.trim();
+    const trimmedWalletApiUrl = walletApiUrl.trim();
     try {
       const result = await api.createMerchant({
         slug: slug.trim(),
         name: name.trim(),
         ...(trimmedMerchantId ? { merchantId: trimmedMerchantId } : {}),
+        ...(trimmedWalletApiUrl ? { walletApiUrl: trimmedWalletApiUrl } : {}),
         ...(trimmedOperatorEmail ? { operatorEmail: trimmedOperatorEmail } : {}),
         ...(trimmedOperatorPassword
           ? { operatorPassword: trimmedOperatorPassword }
@@ -126,6 +129,20 @@ export default function SettingsMerchantsPage() {
               Value your operator platform puts in the player launch token{' '}
               <code className="text-zinc-300">merchantId</code> claim. Auto-filled
               from the slug; edit only if your integration uses a different id.
+            </span>
+          </label>
+          <label className="grid gap-1">
+            <span className={ui.label}>Wallet API URL (optional)</span>
+            <input
+              className={ui.input}
+              type="url"
+              value={walletApiUrl}
+              onChange={(e) => setWalletApiUrl(e.target.value)}
+              placeholder="https://wallet.client.example.com/api"
+            />
+            <span className={ui.muted}>
+              Client wallet base URL for balance, bet debits, and settlement
+              payouts. Can also be set later under Tenant settings.
             </span>
           </label>
           <label className="grid gap-1">

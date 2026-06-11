@@ -10,7 +10,7 @@ Runs on **port 3002** (player shell uses 3000; API uses 3001).
 
 ```bash
 cp .env.example .env.local
-pnpm install   # or npm install
+npm install
 ```
 
 Ensure the API allows browser CORS from this origin in development:
@@ -31,7 +31,7 @@ Seed: `platform@example.com` is granted **Acme only**; `super@example.com` sees 
 cd ../sports-betting-service && npm run start:dev
 
 # Terminal 2 — back office
-pnpm dev
+npm run dev
 ```
 
 Open [http://localhost:3002](http://localhost:3002).
