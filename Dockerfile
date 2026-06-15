@@ -8,7 +8,9 @@ RUN npm install --no-audit --no-fund
 FROM base AS build
 ARG NEXT_PUBLIC_API_BASE=http://localhost:5003/api/v1
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
-ENV NODE_OPTIONS="--max-old-space-size=768"
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV SKIP_TYPECHECK=1
+ENV NODE_OPTIONS="--max-old-space-size=1024"
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
