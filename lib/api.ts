@@ -20,6 +20,7 @@ import type {
   StaffProfile,
   Tenant,
   UnsettledEvent,
+  WalletSettlementQueue,
 } from './types';
 
 export class ApiError extends Error {
@@ -313,6 +314,11 @@ export function createBackofficeClient(accessToken: string) {
     listUnsettledEvents: (casinoGroupId: string) =>
       request<UnsettledEvent[]>(
         '/backoffice/settlement/events',
+        withGroup(casinoGroupId),
+      ),
+    listWalletSettlementQueue: (casinoGroupId: string) =>
+      request<WalletSettlementQueue>(
+        '/backoffice/settlement/wallet-queue',
         withGroup(casinoGroupId),
       ),
     runEventSettlement: (casinoGroupId: string, eventId: string) =>

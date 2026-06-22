@@ -35,6 +35,7 @@ const MAIN_NAV: NavItem[] = [
     href: '/settlement',
     label: 'Settlement',
     permission: 'settlement.read',
+    match: '/settlement',
   },
   {
     href: '/analytics',

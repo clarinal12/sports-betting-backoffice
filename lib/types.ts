@@ -129,6 +129,47 @@ export interface SettlementRunResult {
   awayScore?: number;
 }
 
+export interface WalletSettlementQueueItem {
+  outboxId: string;
+  betId: string;
+  batchId: string | null;
+  transactionCode: string;
+  outboxStatus: string;
+  attempts: number;
+  lastError: string | null;
+  nextRetryAt: string | null;
+  retryDue: boolean;
+  createdAt: string;
+  updatedAt: string;
+  walletAmount: string | null;
+  bet: {
+    id: string;
+    userId: string;
+    username: string;
+    status: string;
+    stake: string;
+    payoutAmount: string | null;
+    currency: string;
+    settledAt: string | null;
+  };
+}
+
+export interface WalletSettlementQueue {
+  casinoGroupId: string;
+  summary: {
+    pendingCount: number;
+    batchCount: number;
+    retryingCount: number;
+    dueNowCount: number;
+  };
+  batches: {
+    batchId: string | null;
+    count: number;
+    oldestCreatedAt: string;
+  }[];
+  items: WalletSettlementQueueItem[];
+}
+
 export interface AnalyticsSummary {
   casinoGroupId: string;
   byStatus: Record<

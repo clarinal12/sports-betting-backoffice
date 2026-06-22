@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { useAuth, useApiErrorHandler } from '@/components/auth-provider';
 import { PermissionGate } from '@/components/permission-gate';
+import { SettlementSubnav } from '@/components/settlement-subnav';
 import { TenantRequired } from '@/components/tenant-required';
 import { useTenant } from '@/components/tenant-context';
 import {
@@ -186,6 +187,7 @@ export default function SettlementPage() {
             selected merchant.
           </p>
         </header>
+        <SettlementSubnav />
         <TenantRequired>
           {error ? <p className="mb-4 text-sm text-red-400">{error}</p> : null}
           {message ? <p className="mb-4 text-sm text-emerald-400">{message}</p> : null}

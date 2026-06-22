@@ -143,9 +143,14 @@ export default function HomePage() {
               </Link>
             ) : null}
             {hasPermission(staff?.permissions ?? [], 'settlement.read') ? (
-              <Link href="/settlement" className={ui.navLink}>
-                Settlement queue
-              </Link>
+              <>
+                <Link href="/settlement" className={ui.navLink}>
+                  Settlement queue
+                </Link>
+                <Link href="/settlement/wallet-queue" className={ui.navLink}>
+                  Wallet transmission
+                </Link>
+              </>
             ) : null}
             {hasPermission(staff?.permissions ?? [], 'compliance.audit.read') ? (
               <Link href="/compliance/audit" className={ui.navLink}>
