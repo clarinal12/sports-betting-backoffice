@@ -21,6 +21,7 @@ import type {
   Tenant,
   UnsettledEvent,
   WalletSettlementQueue,
+  WalletTransmissionRetryResult,
 } from './types';
 
 export class ApiError extends Error {
@@ -319,6 +320,12 @@ export function createBackofficeClient(accessToken: string) {
     listWalletSettlementQueue: (casinoGroupId: string) =>
       request<WalletSettlementQueue>(
         '/backoffice/settlement/wallet-queue',
+        withGroup(casinoGroupId),
+      ),
+    retryWalletSettlementTransmission: (casinoGroupId: string) =>
+      post<WalletTransmissionRetryResult>(
+        '/backoffice/settlement/wallet-queue/retry',
+        undefined,
         withGroup(casinoGroupId),
       ),
     runEventSettlement: (casinoGroupId: string, eventId: string) =>

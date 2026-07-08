@@ -8,6 +8,7 @@ import { SettlementSubnav } from '@/components/settlement-subnav';
 import { StatCard } from '@/components/stat-card';
 import { TenantRequired } from '@/components/tenant-required';
 import { useTenant } from '@/components/tenant-context';
+import { hasPermission } from '@/lib/permissions';
 import type { WalletSettlementQueue } from '@/lib/types';
 import { ui } from '@/lib/ui';
 
@@ -23,13 +24,17 @@ function shortId(value: string): string {
 }
 
 export default function WalletSettlementQueuePage() {
-  const { api } = useAuth();
+  const { api, staff } = useAuth();
   const { groupId } = useTenant();
   const handleError = useApiErrorHandler();
   const [data, setData] = useState<WalletSettlementQueue | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [transmitting, setTransmitting] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+
+  const canTransmit = hasPermission(staff?.permissions ?? [], 'settlement.run');
 
   const load = useCallback(async () => {
     if (!api || !groupId) return;
@@ -58,6 +63,32 @@ export default function WalletSettlementQueuePage() {
     return () => clearInterval(timer);
   }, [api, groupId, load]);
 
+  async function onRetryTransmission() {
+    if (!api || !groupId || !canTransmit) return;
+    setTransmitting(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await api.retryWalletSettlementTransmission(groupId);
+      if (result.pendingBefore === 0) {
+        setMessage('Nothing pending — wallet queue is already clear.');
+      } else if (result.pendingAfter === 0) {
+        setMessage(
+          `Transmitted ${result.batchesSent} batch(es). All pending settlements delivered.`,
+        );
+      } else {
+        setMessage(
+          `Transmitted ${result.batchesSent} batch(es). ${result.pendingAfter} bet(s) still pending — check last error below.`,
+        );
+      }
+      await load();
+    } catch (err) {
+      setError(await handleError(err));
+    } finally {
+      setTransmitting(false);
+    }
+  }
+
   return (
     <PermissionGate permission="settlement.read">
       <div className={ui.page}>
@@ -74,10 +105,20 @@ export default function WalletSettlementQueuePage() {
 
         <TenantRequired>
           <div className="mb-4 flex flex-wrap items-center gap-3">
+            {canTransmit ? (
+              <button
+                type="button"
+                className={ui.btn}
+                disabled={transmitting || loading || !data?.summary.pendingCount}
+                onClick={() => void onRetryTransmission()}
+              >
+                {transmitting ? 'Transmitting…' : 'Transmit to wallet now'}
+              </button>
+            ) : null}
             <button
               type="button"
               className={ui.btnGhost}
-              disabled={loading}
+              disabled={loading || transmitting}
               onClick={() => void load()}
             >
               {loading ? 'Refreshing…' : 'Refresh now'}
@@ -90,6 +131,7 @@ export default function WalletSettlementQueuePage() {
             ) : null}
           </div>
 
+          {message ? <p className="mb-4 text-sm text-emerald-400">{message}</p> : null}
           {error ? <p className="mb-4 text-sm text-red-400">{error}</p> : null}
 
           {data ? (

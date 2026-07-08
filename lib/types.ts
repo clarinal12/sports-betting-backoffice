@@ -170,6 +170,13 @@ export interface WalletSettlementQueue {
   items: WalletSettlementQueueItem[];
 }
 
+export interface WalletTransmissionRetryResult {
+  casinoGroupId: string;
+  batchesSent: number;
+  pendingBefore: number;
+  pendingAfter: number;
+}
+
 export interface AnalyticsSummary {
   casinoGroupId: string;
   byStatus: Record<
